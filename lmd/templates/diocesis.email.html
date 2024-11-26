@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Fe de Bautismo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 1px solid #dddddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #007BFF;
+        }
+        .content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #dddddd;
+            padding-top: 10px;
+        }
+        .highlight {
+            color: #007BFF;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Solicitud de Fe de Bautismo</h1>
+        </div>
+        <div class="content">
+            <p>Estimado <span class="highlight">Sr. Párroco</span></p>
+            <p>
+                Me dirijo a usted respetuosamente para solicitar una copia de la fe de bautismo de:
+            </p>
+            <ul>
+                <li><strong>Nombre completo:</strong> {{ email_context.full_name }}</li>
+                <li><strong>Fecha de nacimiento:</strong> {{ email_context.birthday }}</li>
+                <li><strong>Nombre del padre:</strong> {{ email_context.father_fullname }}</li>
+                <li><strong>Nombre de la madre:</strong> {{ email_context.mother_fullname }}</li>
+                {% if email_context.baptism_date %}
+                <li><strong>Fecha estimada del bautismo:</strong> {{ email_context.baptism_date }}</li>
+                {% endif %}
+                {% if email_context.baptism_parish %}
+                <li><strong>Parroquia o iglesia de bautismo:</strong> {{ email_context.baptism_parish }}</li>
+                {% endif %}
+                <li><strong>Lugar de nacimiento:</strong> {{ email_context.birthplace }}</li>
+            </ul>
+            <p>
+                La fe de bautismo es necesaria para <span class="highlight">{{ email_context.purpose_value }}</span>.
+                Agradecería mucho si pudiera verificar en sus registros y proporcionarme una copia, en caso de ser posible.
+            </p>
+            <p>
+                Estoy disponible para proporcionar cualquier información adicional que pueda necesitar y, si corresponde, para abonar los gastos administrativos que implique esta solicitud.
+            </p>
+            <p>
+                Por favor, no dude en contactarme en caso de requerir más detalles:
+            </p>
+            <ul>
+                <li><strong>Teléfono:</strong> {{ email_context.user.identity.phone }}</li>
+                <li><strong>Correo electrónico:</strong> {{ email_context.user.email }}</li>
+            </ul>
+            <p>
+                Agradezco de antemano su atención y amabilidad. Estoy a su disposición para lo que considere necesario.
+            </p>
+            <p>Atentamente,</p>
+            <p><strong>{{ email_context.user.get_full_name }}</strong></p>
+        </div>
+        <div class="footer">
+            <p>
+                Este correo ha sido redactado respetando las normativas y prácticas habituales para solicitudes eclesiásticas. Para más información sobre las leyes relacionadas con registros parroquiales, visite:
+            </p>
+            <p><a href="https://www.mjusticia.gob.es" target="_blank">Ministerio de Justicia de España</a></p>
+        </div>
+    </div>
+</body>
+</html>

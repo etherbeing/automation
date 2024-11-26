@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            color: #555;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+        }
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .dni-img{
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 16/9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Solicitud de Certificación de Nacimiento</h1>
+        <p>Estimado/a responsable del Registro Civil de <strong>{{ location }}</strong>,</p>
+        <p>
+            Por la presente, solicito una copia certificada del registro de nacimiento de la siguiente persona:
+        </p>
+        <div class="section-title">Datos del solicitante:</div>
+        <ul>
+            <li><strong>Nombre completo:</strong> {{ email_context.user.get_full_name|default:"Roberto Pérez" }}</li>
+            {% if email_context.user.identity.dni_number %}
+            <li><strong>DNI/NIE/Pasaporte:</strong> {{ email_context.user.identity.dni_number }}</li>
+            {% endif %}
+            <li><strong>Relación con el titular:</strong> {{ email_context.relationship|default:"Abuela" }}</li>
+        </ul>
+        <div class="section-title">Datos del titular del certificado:</div>
+        <ul>
+            <li><strong>Nombre completo:</strong> {{ email_context.full_name }}</li>
+            <li><strong>Fecha de nacimiento:</strong> {{ email_context.birthday }}</li>
+            <li><strong>Lugar de nacimiento:</strong> {{ email_context.birthplace }}</li>
+            <li><strong>Nombre de la madre:</strong> {{ email_context.mother_fullname }}</li>
+            <li><strong>Nombre del padre:</strong> {{ email_context.father_fullname }}</li>
+        </ul>
+        <p>
+            Esta solicitud se realiza con el propósito de <strong>{{ email_context.purpose_value }}</strong>. 
+            Se adjunta la documentación requerida según la legislación vigente, incluyendo:
+        </p>
+        <ul>
+            <li>
+                Copia del DNI/NIE/Pasaporte del solicitante
+                <img src="{{ email_context.user.identity.dni.url }}" alt="Documento Nacional de Identidad" class="dni-img"/>
+            </li>
+        </ul>
+        <p>
+            Agradezco de antemano su colaboración y quedo a disposición para cualquier consulta o documentación adicional.
+        </p>
+        <p>Atentamente,</p>
+        <p>
+            <strong>{{ email_context.user.get_full_name }}</strong><br>
+            <a href="mailto:{{ email_context.user.email }}">{{ email_context.user.email }}</a><br>
+            Teléfono: {{ email_context.user.identity.phone }}
+        </p>
+        <div class="footer">
+            <hr>
+            <p><strong>Enlaces relacionados:</strong></p>
+            <p>
+                <a href="https://www.boe.es/buscar/act.php?id=BOE-A-2011-12628">Ley 20/2011, de 21 de julio, del Registro Civil (BOE)</a><br>
+                <a href="https://www.mjusticia.gob.es/es/AreasTematicas/Registros/Civil">Ministerio de Justicia - Registro Civil</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

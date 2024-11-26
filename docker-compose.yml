@@ -1,0 +1,107 @@
+volumes:
+  s3:
+  redis:
+  certs:
+  postgres:
+  weblate-data:
+  weblate-cache:
+  mailpit-data:
+services:
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "127.0.0.1:8025:8025"   # Web interface
+      - "127.0.0.1:1025:1025"   # SMTP port for email testing
+    volumes:
+      - mailpit-data:/data
+    restart: unless-stopped
+  weblate: # Internationalization API
+    # Good doc at: https://docs.weblate.org/en/latest/admin/install/docker.html
+    image: weblate/weblate
+    env_file:
+      - .env
+    volumes:
+    - weblate-data:/app/data
+    - weblate-cache:/app/cache
+    ports:
+      - 127.0.0.1:8081:8080
+    environment:
+      # WEBLATE_EMAIL_HOST: smtp.example.com
+      # WEBLATE_EMAIL_HOST_USER: user
+      # WEBLATE_EMAIL_HOST_PASSWORD: pass
+      # WEBLATE_SERVER_EMAIL: weblate@example.com
+      # WEBLATE_DEFAULT_FROM_EMAIL: weblate@example.com
+      WEBLATE_SITE_DOMAIN: ${DOMAIN:-localhost}
+      WEBLATE_ADMIN_PASSWORD: admin
+      WEBLATE_ADMIN_EMAIL: weblate.admin@example.com
+      POSTGRES_DB: weblate
+  s3: # Media and Object Storage API
+    image: minio/minio:RELEASE.2024-09-22T00-33-43Z.fips
+    environment:
+      MINIO_ROOT_USER: "admin-automation"  # Set the root user
+      MINIO_ROOT_PASSWORD: "admin-automation"  # Set the root password
+    volumes:
+      - s3:/data  # Persist data on your host
+    ports:
+      - "127.0.0.1:9000:9000"  # MinIO console/web access
+      - "127.0.0.1:9001:9001"  # MinIO admin console access (optional)
+    command: minio server --json /data --console-address ":9001" # http://minio{1...4}
+  redis: # In Memory Cache database
+    image: redis:7
+    ports:
+      - "127.0.0.1:6379:6379"  # Exposing Redis default port 6379 to localhost
+    volumes:
+      - redis:/data  # Persist Redis data
+  oauth: # Oauth and Authentication Server
+    image: quay.io/keycloak/keycloak:25.0.5
+    environment:
+      - KC_HEALTH_ENABLED=true
+      - KC_METRICS_ENABLED=true
+      - KC_HOSTNAME=${DOMAIN:-localhost}
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - certs:/certs
+    command: ["start-dev", "--log-level", 'INFO']
+    depends_on:
+      - postgres
+    ports:
+      - 127.0.0.1:8443:8443
+      - 127.0.0.1:8080:8080
+  postgres: # Single Node Database (DUE to be deprecated by clusterized db)
+    image: postgres
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  db: # Multiple node or clusterized DB
+    # To create new clients please use the below command:
+    # cockroach cert create-node 127.0.0.1 localhost db $(hostname) $(hostname -i) --certs-dir=certs --ca-key=certs/ca.key --overwrite
+    # cockroach cert create-client keycloak --certs-dir=certs --ca-key=certs/ca.key --also-generate-pkcs8-key
+    # After that please remember to add the new key pars client.<username>.{crt,key} to the user permission group by using the chown command
+    # chown -R 1000:1000 certs/client.keycloak.{crt,key}
+    # 
+    # cockroach sql --url "<server_url>"
+    # 
+    # CREATE DATABASE <database>;
+    # CREATE USER <user>;
+    # GRANT ALL ON DATABASE <database> TO <user>;
+
+    image: cockroachdb/cockroach:latest
+    command: ["start-single-node", "--http-addr", ":8081", "--sql-addr", ":5435",]
+    ports:
+      - 127.0.0.1:5435:5435
+    volumes:
+      - certs:/cockroach/certs
+  queue: # Queue manager for Celery and similar
+    image: rabbitmq:3
+    ports:
+      - 5672:5672
