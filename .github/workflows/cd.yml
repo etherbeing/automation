@@ -11,7 +11,7 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       IMAGE: ghcr.io/${{ secrets.CR_USER }}/automation:${{ github.run_id }}
       
