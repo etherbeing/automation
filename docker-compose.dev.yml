@@ -9,6 +9,9 @@ volumes:
 services:
   mailpit:
     image: axllent/mailpit
+    ports:
+      - "127.0.0.1:8025:8025"   # Web interface
+      - "127.0.0.1:1025:1025"   # SMTP port for email testing
     volumes:
       - mailpit-data:/data
     restart: unless-stopped
@@ -20,6 +23,8 @@ services:
     volumes:
     - weblate-data:/app/data
     - weblate-cache:/app/cache
+    ports:
+      - 127.0.0.1:8083:8080
     environment:
       # WEBLATE_EMAIL_HOST: smtp.example.com
       # WEBLATE_EMAIL_HOST_USER: user
@@ -37,9 +42,14 @@ services:
       MINIO_ROOT_PASSWORD: "admin-automation"  # Set the root password
     volumes:
       - s3:/data  # Persist data on your host
+    ports:
+      - "127.0.0.1:9000:9000"  # MinIO console/web access
+      - "127.0.0.1:9001:9001"  # MinIO admin console access (optional)
     command: minio server --json /data --console-address ":9001" # http://minio{1...4}
   redis: # In Memory Cache database
     image: redis:7
+    ports:
+      - "127.0.0.1:6379:6379"  # Exposing Redis default port 6379 to localhost
     volumes:
       - redis:/data  # Persist Redis data
   oauth: # Oauth and Authentication Server
@@ -59,8 +69,13 @@ services:
     command: ["start-dev", "--log-level", 'INFO']
     depends_on:
       - postgres
+    ports:
+      - 127.0.0.1:8443:8443
+      - 127.0.0.1:8080:8080
   postgres: # Single Node Database (DUE to be deprecated by clusterized db)
     image: postgres
+    ports:
+      - 127.0.0.1:5432:5432
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_DB: admin
@@ -82,7 +97,11 @@ services:
 
     image: cockroachdb/cockroach:latest
     command: ["start-single-node", "--http-addr", ":8081", "--sql-addr", ":5435",]
+    ports:
+      - 127.0.0.1:5435:5435
     volumes:
       - certs:/cockroach/certs
   queue: # Queue manager for Celery and similar
     image: rabbitmq:3
+    ports:
+      - 5672:5672
